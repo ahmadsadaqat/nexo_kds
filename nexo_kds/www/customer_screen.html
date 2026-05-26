@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Order Track Matrix</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+
+        /* Smooth Shifting Crossfade Effect */
+        .bg-slider {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1.5s ease-in-out;
+            z-index: 0;
+        }
+
+        /* Ambient Ultra-Glow Animations for Token Numbers */
+        @keyframes highGlowAmber {
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.25); border-color: rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 45px rgba(245, 158, 11, 0.65); border-color: rgba(245, 158, 11, 0.8); }
+        }
+
+        @keyframes highGlowEmerald {
+            0%, 100% { box-shadow: 0 0 25px rgba(52, 211, 153, 0.3); border-color: rgba(52, 211, 153, 0.4); }
+            50% { box-shadow: 0 0 55px rgba(52, 211, 153, 0.8); border-color: rgba(52, 211, 153, 0.9); }
+        }
+
+        .pulse-amber-card {
+            animation: highGlowAmber 3s infinite ease-in-out;
+        }
+
+        .pulse-emerald-card {
+            animation: highGlowEmerald 2.5s infinite ease-in-out;
+        }
+
+        /* Status Dot Pulse */
+        @keyframes dotPulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+        .live-dot { animation: dotPulse 2s infinite ease-in-out; }
+    </style>
+</head>
+<body class="h-full font-sans bg-slate-950 text-slate-100 overflow-hidden select-none relative">
+
+    <div class="relative z-20 h-full flex flex-col min-h-0">
+        <header class="h-22 px-8 flex items-center justify-between shrink-0 border-b border-white/10 bg-slate-950 shadow-2xl">
+            <div class="space-y-1">
+                <h1 class="text-3xl font-black tracking-wider text-white">
+                    LIVE <span class="text-indigo-400 font-medium">ORDERS</span>
+                </h1>
+                <p class="text-xs text-slate-300 font-semibold tracking-wide">Please collect your meal token orders once shifted to the Ready counter pane.</p>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="text-xs font-mono font-black text-white bg-slate-900 border border-white/20 px-4 py-2 rounded-xl tracking-wider shadow-md" id="display-branch-meta">
+                    BRANCH: SYNCING...
+                </div>
+                <div id="digital-clock" class="text-xl font-mono font-black text-white bg-indigo-600 px-5 py-2 rounded-xl border border-indigo-400 tracking-widest shadow-xl shadow-indigo-600/20">
+                    00:00:00
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 flex min-h-0 w-full relative">
+            
+            <section class="w-1/2 flex flex-col min-h-0 relative border-r border-white/10 overflow-hidden group">
+                <div id="prep-bg-slider" class="bg-slider opacity-45 backdrop-blur-xs scale-102"></div>
+                <div class="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/50 to-slate-950/70 z-0"></div>
+
+                <div class="relative z-10 flex flex-col h-full p-8">
+                    <div class="flex items-center justify-between pb-5 mb-5 border-b border-white/20 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <span class="relative flex h-3.5 w-3.5">
+                                <span class="live-dot absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-90 shadow-[0_0_15px_#f59e0b]"></span>
+                                <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500"></span>
+                            </span>
+                            <h2 class="text-xl uppercase font-black tracking-widest text-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Preparing Now</h2>
+                        </div>
+                        <div id="prep-counter-badge" class="bg-amber-500 text-slate-950 font-mono font-black px-4 py-1 rounded-lg text-sm shadow-md">
+                            0 ORDERS
+                        </div>
+                    </div>
+                    <div id="preparing-tokens-box" class="flex-1 overflow-y-auto grid grid-cols-2 lg:grid-cols-3 gap-5 content-start pr-1 custom-scrollbar">
+                        </div>
+                </div>
+            </section>
+
+            <section class="w-1/2 flex flex-col min-h-0 relative overflow-hidden group">
+                <div id="ready-bg-slider" class="bg-slider opacity-45 backdrop-blur-xs scale-102"></div>
+                <div class="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/50 to-slate-950/70 z-0"></div>
+
+                <div class="relative z-10 flex flex-col h-full p-8">
+                    <div class="flex items-center justify-between pb-5 mb-5 border-b border-white/20 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <span class="relative flex h-3.5 w-3.5">
+                                <span class="live-dot absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-90 shadow-[0_0_15px_#34d399]"></span>
+                                <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-400"></span>
+                            </span>
+                            <h2 class="text-xl uppercase font-black tracking-widest text-emerald-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Now Serving</h2>
+                        </div>
+                        <div id="ready-counter-badge" class="bg-emerald-500 text-slate-950 font-mono font-black px-4 py-1 rounded-lg text-sm shadow-md">
+                            0 READY
+                        </div>
+                    </div>
+                    <div id="ready-tokens-box" class="flex-1 overflow-y-auto grid grid-cols-2 lg:grid-cols-3 gap-5 content-start pr-1 custom-scrollbar">
+                        </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // High-Quality Visual Food and Cooking Action Images
+        const prepImages = [
+            "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1541614101331-1a5a3a194e92?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1581299894907-aaa50297cf16?auto=format&fit=crop&w=1200&q=80"
+        ];
+
+        const readyImages = [
+            "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80"
+        ];
+
+        class NexoPremiumDisplay {
+            constructor() {
+                const urlParams = new URLSearchParams(window.location.search);
+                this.branch = urlParams.get('branch') || 'Johar Town';
+                this.prepImgIndex = 0;
+                this.readyImgIndex = 0;
+                this.init();
+            }
+
+            init() {
+                const metaBox = document.getElementById('display-branch-meta');
+                if(metaBox) metaBox.innerText = `BRANCH: ${this.branch.toUpperCase()}`;
+                
+                this.startClock();
+                this.initBackgroundSliders();
+                this.fetchData();
+                setInterval(() => this.fetchData(), 3000);
+            }
+
+            startClock() {
+                const clockNode = document.getElementById('digital-clock');
+                if(!clockNode) return;
+                const tick = () => {
+                    const now = new Date();
+                    clockNode.innerText = now.toLocaleTimeString([], { hour12: false });
+                };
+                tick();
+                setInterval(tick, 1000);
+            }
+
+            initBackgroundSliders() {
+                const prepSlider = document.getElementById('prep-bg-slider');
+                const readySlider = document.getElementById('ready-bg-slider');
+
+                if(prepSlider) prepSlider.style.backgroundImage = `url('${prepImages}')`;
+                if(readySlider) readySlider.style.backgroundImage = `url('${readyImages}')`;
+
+                setInterval(() => {
+                    this.prepImgIndex = (this.prepImgIndex + 1) % prepImages.length;
+                    this.readyImgIndex = (this.readyImgIndex + 1) % readyImages.length;
+                    
+                    if(prepSlider) prepSlider.style.backgroundImage = `url('${prepImages[this.prepImgIndex]}')`;
+                    if(readySlider) readySlider.style.backgroundImage = `url('${readyImages[this.readyImgIndex]}')`;
+                }, 8000);
+            }
+
+            async fetchData() {
+                try {
+                    const res = await fetch(`/api/method/nexo_kds.api.get_customer_display_data?branch=${encodeURIComponent(this.branch)}`);
+                    const data = await res.json();
+                    
+                    if(data.message) {
+                        const preparingList = data.message.preparing || [];
+                        const readyList = data.message.ready || [];
+
+                        document.getElementById('prep-counter-badge').innerText = `${preparingList.length} ORDERS`;
+                        document.getElementById('ready-counter-badge').innerText = `${readyList.length} READY`;
+
+                        this.renderGrid('preparing-tokens-box', preparingList, 'preparing');
+                        this.renderGrid('ready-tokens-box', readyList, 'ready');
+                    }
+                } catch(err) {
+                    console.error("Data pipeline refresh anomaly detected:", err);
+                }
+            }
+
+            renderGrid(boxId, list, type) {
+                const container = document.getElementById(boxId);
+                if(!container) return;
+
+                if(list.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full py-24 text-center text-slate-300 text-sm font-black uppercase tracking-widest border border-dashed border-white/20 rounded-2xl bg-slate-950/80 backdrop-blur-md shadow-inner">
+                            No Active Tickets
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = list.map(token => {
+                    if(type === 'preparing') {
+                        return `
+                            <div class="pulse-amber-card bg-slate-950/85 border-2 border-amber-500/30 rounded-2xl py-8 px-4 flex items-center justify-center backdrop-blur-md shadow-2xl">
+                                <span class="text-4xl lg:text-5xl font-black text-amber-400 font-mono tracking-tight text-center drop-shadow-[0_2px_8px_rgba(0,0,0,1)] select-none">#${token}</span>
+                            </div>
+                        `;
+                    } else {
+                        return `
+                            <div class="pulse-emerald-card bg-emerald-950/85 border-2 border-emerald-500/40 rounded-2xl py-8 px-4 flex items-center justify-center backdrop-blur-md shadow-2xl">
+                                <span class="text-5xl lg:text-6xl font-black text-emerald-400 font-mono tracking-tight text-center drop-shadow-[0_2px_8px_rgba(0,0,0,1)] select-none">#${token}</span>
+                            </div>
+                        `;
+                    }
+                }).join('');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new NexoPremiumDisplay();
+        });
+    </script>
+</body>
+</html>

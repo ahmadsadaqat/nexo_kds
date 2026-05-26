@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexo KDS Terminal Engine</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2342818c'/><text x='50' y='68' font-size='60' text-anchor='middle' fill='white' font-family='sans-serif'>K</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #42818c; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #33636b; }
+
+        /* LATEST LUNCHED HIGH-FLAME RESTAURANT CHEF BACKGROUND IMAGE */
+        .kds-static-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('https://media.istockphoto.com/id/913931814/photo/chef-in-restaurant-kitchen-at-stove-with-high-burning-flames.jpg?s=170667a&w=0&k=20&c=duQ99kr0zToaNMhs8yRGmKTzQLoT44EdSy9LBGhDI0w=');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Light Mode Specific Visibility Controls */
+        [data-theme="light"] .kds-static-bg {
+            opacity: 0.25 !important;
+            filter: contrast(1.1) brightness(0.95);
+        }
+
+        /* CRITICAL RADICAL OVERRIDES:
+           Force-interjects the target hex color #42818c across all structural elements
+           and completely destroys any purple/indigo classes injected dynamically via JavaScript frameworks.
+        */
+        :root, [data-theme], body, html, div, section, article, header, button, span {
+            --color-indigo-500: #42818c !important;
+            --color-indigo-600: #42818c !important;
+            --color-indigo-700: #33636b !important;
+            --color-indigo-950: #0f1c1e !important;
+            --color-purple-500: #42818c !important;
+            --color-purple-600: #42818c !important;
+            --color-purple-700: #33636b !important;
+            --color-purple-950: #0f1c1e !important;
+        }
+
+        /* Force Override for dynamic runtime generated station order cards */
+        [id*="order-card"], [class*="order-card"], div[data-kot], .kds-card, .kot-card {
+            background-color: #42818c !important;
+            color: #ffffff !important;
+            border-color: #33636b !important;
+        }
+        
+        /* Inner container elements of the dynamic cards */
+        [id*="order-card"] div, [class*="order-card"] div, .kds-card-header, .card-top-panel {
+            color: #ffffff !important;
+        }
+
+        /* Strictly format customer screen controls and headers */
+        #btn-customer, button[id*="customer"], [class*="customer-screen"], .bg-indigo-600, .bg-purple-600 {
+            background-color: #42818c !important;
+            color: #ffffff !important;
+            border-color: #33636b !important;
+        }
+        #btn-customer:hover, button[id*="customer"]:hover {
+            background-color: #33636b !important;
+        }
+
+        /* Light Theme Structural Utility Safety Overrides */
+        [data-theme="light"] .light-bg-force { background-color: #ffffff !important; color: #0f172a !important; border-color: #cbd5e1 !important; }
+        [data-theme="light"] .light-panel-force { background-color: #f1f5f9 !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
+        [data-theme="light"] .light-text-darken { color: #0f172a !important; }
+        [data-theme="light"] .light-text-muted { color: #475569 !important; }
+        [data-theme="light"] .light-border-gray { border-color: #cbd5e1 !important; }
+
+        body, header, div, section, button, span, input {
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+    </style>
+</head>
+<body id="kds-root-node" data-theme="dark" class="h-full font-sans flex flex-col overflow-hidden select-none bg-slate-950 text-slate-100 data-[theme=light]:bg-[#9bb2b5]/50 data-[theme=light]:text-slate-900 relative">
+
+    <div class="kds-static-bg opacity-[0.15]"></div>
+
+    <div id="kds-login-screen" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950 data-[theme=light]:bg-slate-900/80 px-4 backdrop-blur-md">
+        <div id="login-card-panel" class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl light-bg-force relative z-10">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-black tracking-tight text-[#42818c]">NEXO KDS LOGIN</h2>
+                <p id="login-subtitle" class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1 light-text-muted">Authorized Station Terminal Access Only</p>
+            </div>
+            <form id="kds-login-form" class="space-y-4">
+                <div>
+                    <label id="lbl-username" class="block text-xs font-black uppercase tracking-wider text-slate-400 mb-1.5 light-text-muted">User Account/Email</label>
+                    <input type="text" id="kds-username" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#42818c] text-slate-100 light-panel-force">
+                </div>
+                <div>
+                    <label id="lbl-password" class="block text-xs font-black uppercase tracking-wider text-slate-400 mb-1.5 light-text-muted">Security Password</label>
+                    <input type="password" id="kds-password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#42818c] text-slate-100 light-panel-force">
+                </div>
+                <div id="login-error-msg" class="hidden text-xs font-bold text-red-400 bg-red-950/40 border border-red-900/40 p-3 rounded-lg text-center"></div>
+                <button type="submit" class="w-full bg-[#42818c] hover:bg-[#33636b] text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all cursor-pointer text-sm">Verify & Mount Terminal</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="kds-main-app" class="hidden flex flex-col h-full min-h-0 relative z-10">
+        <header id="main-app-header" class="h-20 bg-slate-900/90 border-b border-slate-800/60 px-6 flex items-center justify-between z-40 shrink-0 backdrop-blur-md data-[theme=light]:bg-white/95 data-[theme=light]:border-slate-300">
+            <div class="flex items-center gap-4">
+                <div>
+                    <h1 class="text-xl font-black tracking-tight flex items-center gap-2">
+                        <span class="text-[#42818c]">NEXO</span> <span id="header-hub-title" class="text-slate-100 data-[theme=light]:text-slate-900">KDS KITCHEN HUB</span>
+                    </h1>
+                    <span id="branch-badge" class="text-[10px] uppercase font-black tracking-widest bg-slate-800 text-slate-400 border border-slate-700/60 px-2 py-0.5 rounded mt-1 inline-block data-[theme=light]:bg-slate-100 data-[theme=light]:text-slate-700 data-[theme=light]:border-slate-300">Branch: Loading...</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                
+                <button id="theme-toggle-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-400 p-2.5 rounded-xl border border-slate-700 cursor-pointer shadow-md transition-all flex items-center justify-center data-[theme=light]:bg-slate-100 data-[theme=light]:border-slate-300 data-[theme=light]:text-slate-700">
+                    <span id="theme-icon-indicator" class="text-sm">🌙</span>
+                </button>
+
+                <button onclick="window.kdsEngine.openCustomerScreen()" id="btn-customer" class="bg-[#42818c] hover:bg-[#33636b] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 border border-transparent cursor-pointer shadow-md transition-all">
+                    <span>📺 Customer Screen</span>
+                </button>
+
+                <button onclick="window.kdsEngine.openHistoryModal()" id="btn-logs" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 border border-slate-700 cursor-pointer shadow-md transition-all data-[theme=light]:bg-slate-100 data-[theme=light]:border-slate-300 data-[theme=light]:text-amber-700">
+                    <span>📜 View Logs History</span>
+                </button>
+
+                <button id="logout-btn" class="bg-slate-950 hover:bg-red-950 text-slate-400 hover:text-red-400 border border-slate-800 hover:border-red-900/60 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer transition-all data-[theme=light]:bg-slate-100 data-[theme=light]:border-slate-200 data-[theme=light]:text-slate-800">Logout</button>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-x-auto overflow-y-hidden p-6 flex gap-6 items-start custom-scrollbar bg-slate-950/10 data-[theme=light]:bg-slate-100/30 backdrop-blur-[1px]" id="kds-orders-container">
+        </main>
+    </div>
+
+    <div id="history-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+        <div id="history-modal-card" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[80vh] flex flex-col m-4 data-[theme=light]:bg-white data-[theme=light]:border-slate-200 text-slate-100 data-[theme=light]:text-slate-900 light-bg-force relative z-10">
+            <div id="history-modal-hdr" class="flex justify-between items-center mb-4 border-b border-slate-800/80 pb-3 data-[theme=light]:border-slate-200 light-border-gray">
+                <div>
+                    <h3 class="text-base font-black text-[#42818c] uppercase tracking-widest">Kitchen Processing Log History</h3>
+                    <p id="history-modal-subtitle" class="text-[10px] text-slate-500 font-medium light-text-muted">Archived logs with complete items breakdown index and OTA delivery staff tracker</p>
+                </div>
+                <button onclick="window.kdsEngine.closeHistoryModal()" class="text-slate-400 hover:text-red-500 text-2xl font-bold cursor-pointer transition-colors">&times;</button>
+            </div>
+            
+            <div class="mb-4 shrink-0">
+                <input type="text" id="kds-history-search" placeholder="🔍 Filter logs by ticket number..." 
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#42818c] text-slate-100 data-[theme=light]:bg-slate-100 data-[theme=light]:border-slate-300 data-[theme=light]:text-slate-900"
+                       oninput="if(window.kdsEngine && typeof window.kdsEngine.filterHistoryByTicket === 'function') { window.kdsEngine.filterHistoryByTicket(this.value); }">
+            </div>
+
+            <div class="flex-1 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar" id="history-rows-container">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const root = document.getElementById('kds-root-node');
+            const loginScreen = document.getElementById('kds-login-screen');
+            const appHeader = document.getElementById('main-app-header');
+            const hubTitle = document.getElementById('header-hub-title');
+            const branchBadge = document.getElementById('branch-badge');
+            const themeBtn = document.getElementById('theme-toggle-btn');
+            const themeIcon = document.getElementById('theme-icon-indicator');
+            const stationDropdown = document.getElementById('station-dropdown');
+            const dropdownTitle = document.getElementById('dropdown-filter-title');
+            const logoutBtn = document.getElementById('logout-btn');
+            const ordersContainer = document.getElementById('kds-orders-container');
+            const historyCard = document.getElementById('history-modal-card');
+            const historyHeader = document.getElementById('history-modal-hdr');
+
+            let activeTheme = localStorage.getItem('kds_theme') || 'dark';
+            applyTheme(activeTheme);
+
+            themeBtn?.addEventListener('click', () => {
+                activeTheme = (activeTheme === 'dark') ? 'light' : 'dark';
+                applyTheme(activeTheme);
+                localStorage.setItem('kds_theme', activeTheme);
+            });
+
+            function setThemeAttribute(el, theme) {
+                if (el) {
+                    el.setAttribute('data-theme', theme);
+                }
+            }
+
+            function applyTheme(theme) {
+                [
+                    root,
+                    loginScreen,
+                    appHeader,
+                    hubTitle,
+                    branchBadge,
+                    themeBtn,
+                    stationDropdown,
+                    dropdownTitle,
+                    logoutBtn,
+                    ordersContainer,
+                    historyCard,
+                    historyHeader
+                ].forEach(el => setThemeAttribute(el, theme));
+
+                if (themeIcon) {
+                    themeIcon.innerText = theme === 'light' ? '☀️' : '🌙';
+                }
+            }
+        });
+    </script>
+
+<script>
+    // If running outside of the standard desk, manually set the token if available
+    window.csrf_token = "{{ frappe.session.csrf_token }}";
+</script>
+
+    <script src="/assets/nexo_kds/js/kds.js"></script>
+</body>
+</html>

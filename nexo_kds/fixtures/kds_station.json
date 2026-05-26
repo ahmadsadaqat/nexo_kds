@@ -1,0 +1,29 @@
+[
+ {
+  "branch": "Johar Town",
+  "docstatus": 0,
+  "doctype": "KDS Station",
+  "is_active": 1,
+  "kds_station": "Baking",
+  "modified": "2026-05-25 22:02:59.112738",
+  "name": "Baking"
+ },
+ {
+  "branch": "Township",
+  "docstatus": 0,
+  "doctype": "KDS Station",
+  "is_active": 1,
+  "kds_station": "Fry",
+  "modified": "2026-05-26 23:19:35.690013",
+  "name": "Fry"
+ },
+ {
+  "branch": "Johar Town",
+  "docstatus": 0,
+  "doctype": "KDS Station",
+  "is_active": 1,
+  "kds_station": "Frying",
+  "modified": "2026-05-25 19:38:28.639173",
+  "name": "Frying"
+ }
+]

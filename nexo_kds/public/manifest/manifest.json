@@ -1,0 +1,21 @@
+{
+  "short_name": "NexoKDS",
+  "name": "Nexo Kitchen Display System",
+  "icons": [
+    {
+      "src": "/assets/nexo_kds/images/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/assets/nexo_kds/images/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/kds",
+  "background_color": "#111827",
+  "theme_color": "#4F46E5",
+  "display": "standalone",
+  "orientation": "landscape"
+}

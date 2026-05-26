@@ -1,0 +1,174 @@
+[
+ {
+  "amended_from": null,
+  "branch": "Johar Town",
+  "docstatus": 0,
+  "doctype": "Kitchen Order Ticket",
+  "floor": "Ground",
+  "invoice_no": "ACC-SINV-2026-00039",
+  "item": [
+   {
+    "addon": null,
+    "addon_kds": null,
+    "has_addons": 1,
+    "item": "SKU011",
+    "item_name": "Italian Burger",
+    "kds": "Frying",
+    "parent": "KOT-26-00012",
+    "parentfield": "item",
+    "parenttype": "Kitchen Order Ticket",
+    "qty": "1",
+    "status": "Ready",
+    "uom": "Nos"
+   },
+   {
+    "addon": null,
+    "addon_kds": null,
+    "has_addons": 0,
+    "item": "SKU",
+    "item_name": "Mexican Pizza",
+    "kds": "Baking",
+    "parent": "KOT-26-00012",
+    "parentfield": "item",
+    "parenttype": "Kitchen Order Ticket",
+    "qty": "1",
+    "status": "Ready",
+    "uom": "Nos"
+   }
+  ],
+  "modified": "2026-05-26 22:22:28.164253",
+  "name": "KOT-26-00012",
+  "order_type": "Dine-In",
+  "status": "Picked Up",
+  "table": "1"
+ },
+ {
+  "amended_from": null,
+  "branch": "Johar Town",
+  "docstatus": 0,
+  "doctype": "Kitchen Order Ticket",
+  "floor": "Ground",
+  "invoice_no": "ACC-SINV-2026-00039",
+  "item": [
+   {
+    "addon": null,
+    "addon_kds": null,
+    "has_addons": 1,
+    "item": "SKU011",
+    "item_name": "Italian Burger",
+    "kds": "Frying",
+    "parent": "KOT-26-00013",
+    "parentfield": "item",
+    "parenttype": "Kitchen Order Ticket",
+    "qty": "1",
+    "status": "Ready",
+    "uom": "Nos"
+   },
+   {
+    "addon": null,
+    "addon_kds": null,
+    "has_addons": 0,
+    "item": "SKU",
+    "item_name": "Mexican Pizza",
+    "kds": "Baking",
+    "parent": "KOT-26-00013",
+    "parentfield": "item",
+    "parenttype": "Kitchen Order Ticket",
+    "qty": "1",
+    "status": "Ready",
+    "uom": "Nos"
+   }
+  ],
+  "modified": "2026-05-26 22:22:28.990081",
+  "name": "KOT-26-00013",
+  "order_type": "Dine-In",
+  "status": "Picked Up",
+  "table": "1"
+ },
+ {
+  "amended_from": null,
+  "branch": "Johar Town",
+  "docstatus": 0,
+  "doctype": "Kitchen Order Ticket",
+  "floor": "Ground",
+  "invoice_no": "ACC-SINV-2026-00039",
+  "item": [
+   {
+    "addon": null,
+    "addon_kds": null,
+    "has_addons": 1,
+    "item": "SKU011",
+    "item_name": "Italian Burger",
+    "kds": "Frying",
+    "parent": "KOT-26-00014",
+    "parentfield": "item",
+    "parenttype": "Kitchen Order Ticket",
+    "qty": "1",
+    "status": "Ready",
+    "uom": "Nos"
+   },
+   {
+    "addon": null,
+    "addon_kds": null,
+    "has_addons": 0,
+    "item": "SKU",
+    "item_name": "Mexican Pizza",
+    "kds": "Baking",
+    "parent": "KOT-26-00014",
+    "parentfield": "item",
+    "parenttype": "Kitchen Order Ticket",
+    "qty": "1",
+    "status": "Ready",
+    "uom": "Nos"
+   }
+  ],
+  "modified": "2026-05-26 22:22:29.018243",
+  "name": "KOT-26-00014",
+  "order_type": "Dine-In",
+  "status": "Picked Up",
+  "table": "1"
+ },
+ {
+  "amended_from": null,
+  "branch": "Johar Town",
+  "docstatus": 0,
+  "doctype": "Kitchen Order Ticket",
+  "floor": "Ground",
+  "invoice_no": "ACC-SINV-2026-00039",
+  "item": [
+   {
+    "addon": null,
+    "addon_kds": null,
+    "has_addons": 1,
+    "item": "SKU011",
+    "item_name": "Italian Burger",
+    "kds": "Frying",
+    "parent": "KOT-26-00015",
+    "parentfield": "item",
+    "parenttype": "Kitchen Order Ticket",
+    "qty": "1",
+    "status": "Ready",
+    "uom": "Nos"
+   },
+   {
+    "addon": null,
+    "addon_kds": null,
+    "has_addons": 0,
+    "item": "SKU",
+    "item_name": "Mexican Pizza",
+    "kds": "Baking",
+    "parent": "KOT-26-00015",
+    "parentfield": "item",
+    "parenttype": "Kitchen Order Ticket",
+    "qty": "1",
+    "status": "Ready",
+    "uom": "Nos"
+   }
+  ],
+  "modified": "2026-05-26 22:22:28.916517",
+  "name": "KOT-26-00015",
+  "order_type": "Dine-In",
+  "status": "Picked Up",
+  "table": "1"
+ }
+]

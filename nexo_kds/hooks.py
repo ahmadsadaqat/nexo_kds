@@ -5,6 +5,12 @@ app_description = "Kitchen Display System"
 app_email = "avoguepersonality@gmail.com"
 app_license = "mit"
 
+fixtures = [
+	"KDS Station",
+	"Kitchen Order Ticket",
+	"Kitchen Order Item",
+]
+
 # Apps
 # ------------------
 
