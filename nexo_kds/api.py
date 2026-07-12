@@ -229,3 +229,71 @@ def get_kot_history(branch):
             fields=["item_name", "qty"])
             
     return history_kots
+@frappe.whitelist()
+def create_kot(payload):
+    import json
+    try:
+        data = json.loads(payload)
+        frappe.log_error(title="KOT Payload Debug", message=frappe.as_json(data))
+        
+        items = data.get("items", [])
+        if not items:
+            return {"success": False, "message": "No items provided"}
+
+        branch = data.get("branch")
+        order_type = data.get("order_type")
+        table = data.get("table_no")
+        # Find floor from table if needed, or leave it blank
+        floor = None
+        if table:
+            table_doc = frappe.get_all("Table", or_filters={"table_name": table, "name": table}, fields=["floor"], limit=1)
+            if table_doc:
+                floor = table_doc[0].floor
+        
+        kot = frappe.new_doc("Kitchen Order Ticket")
+        kot.branch = branch
+        
+        # Match order_type dynamically
+        valid_options = frappe.get_meta("Kitchen Order Ticket").get_field("order_type").options
+        matched_type = order_type
+        if valid_options and order_type:
+            for opt in valid_options.split("\n"):
+                if opt and opt.lower().replace("-", "").replace(" ", "") == order_type.lower().replace("-", "").replace(" ", ""):
+                    matched_type = opt
+                    break
+        kot.order_type = matched_type
+        
+        kot.table = table
+        kot.floor = floor
+        kot.status = "Pending"
+        kot.invoice_no = data.get("invoice_no")
+        
+        items_added = 0
+        for item in items:
+            item_code = item.get("item_code")
+            item_doc = frappe.get_doc("Item", item_code)
+            
+            kds_station = item_doc.custom_kds_station
+            if not kds_station:
+                continue # Skip items without a KDS station
+                
+            kot.append("item", {
+                "item": item_code,
+                "item_name": item_doc.item_name,
+                "qty": item.get("qty", 1),
+                "uom": item_doc.stock_uom,
+                "kds": kds_station,
+                "status": "Pending"
+            })
+            items_added += 1
+            
+        if items_added == 0:
+            return {"success": False, "message": "No items with a KDS Station assigned were found."}
+            
+        kot.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        return {"success": True, "message": "KOT Created", "name": kot.name}
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "KDS Create KOT Error")
+        return {"success": False, "message": str(e)}
