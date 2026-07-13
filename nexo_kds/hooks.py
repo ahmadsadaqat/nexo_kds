@@ -143,10 +143,20 @@ fixtures = []
 
 doc_events = {
 	"POS Invoice": {
-		"on_submit": "nexo_kds.api.create_kot_from_invoice"
+		"on_submit": "nexo_kds.api.create_kot_from_invoice",
+		"before_save": "nexo_kds.api.validate_table_availability",
+		"after_insert": "nexo_kds.api.update_table_status",
+		"on_update": "nexo_kds.api.update_table_status",
+		"on_cancel": "nexo_kds.api.free_table",
+		"on_trash": "nexo_kds.api.free_table"
 	},
 	"Sales Invoice": {
-		"on_submit": "nexo_kds.api.create_kot_from_invoice"
+		"on_submit": "nexo_kds.api.create_kot_from_invoice",
+		"before_save": "nexo_kds.api.validate_table_availability",
+		"after_insert": "nexo_kds.api.update_table_status",
+		"on_update": "nexo_kds.api.update_table_status",
+		"on_cancel": "nexo_kds.api.free_table",
+		"on_trash": "nexo_kds.api.free_table"
 	}
 }
 

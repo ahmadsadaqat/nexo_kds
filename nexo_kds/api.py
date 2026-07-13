@@ -359,3 +359,52 @@ def create_kot_from_invoice(doc, method=None):
         kot.insert(ignore_permissions=True)
         # We don't commit here because we are in a document event (transaction)
 
+
+def validate_table_availability(doc, method=None):
+    import frappe
+    if not doc.get("posa_table_no"):
+        return
+
+    is_new_table = False
+    if not doc.name or doc.get("__islocal"):
+        is_new_table = True
+    else:
+        old_doc = doc.get_doc_before_save()
+        if old_doc:
+            old_table = old_doc.get("posa_table_no")
+        else:
+            old_table = frappe.db.get_value(doc.doctype, doc.name, "posa_table_no")
+        if old_table != doc.get("posa_table_no"):
+            is_new_table = True
+
+    if is_new_table:
+        status = frappe.db.get_value("Table", doc.get("posa_table_no"), "status")
+        if status and status != "Available":
+            frappe.throw(f"Table {doc.get('posa_table_no')} is currently {status}. You can only create an order for an Available table.")
+
+def update_table_status(doc, method=None):
+    import frappe
+    
+    old_table = None
+    if not doc.get("__islocal") and doc.name:
+        old_doc = doc.get_doc_before_save()
+        if old_doc:
+            old_table = old_doc.get("posa_table_no")
+            
+    new_table = doc.get("posa_table_no")
+    
+    if old_table and old_table != new_table:
+        # Free the old table
+        frappe.db.set_value("Table", old_table, "status", "Available")
+        
+    if new_table:
+        status = frappe.db.get_value("Table", new_table, "status")
+        if status == "Available":
+            frappe.db.set_value("Table", new_table, "status", "Occupied")
+
+def free_table(doc, method=None):
+    import frappe
+    if not doc.get("posa_table_no"):
+        return
+        
+    frappe.db.set_value("Table", doc.get("posa_table_no"), "status", "Available")
