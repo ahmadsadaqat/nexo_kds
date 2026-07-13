@@ -362,6 +362,13 @@ def create_kot_from_invoice(doc, method=None):
 
 def validate_table_availability(doc, method=None):
     import frappe
+    
+    order_type = doc.get("posa_order_type") or ""
+    # If order type is Delivery or Takeaway, table should not be used
+    if order_type.lower() in ["delivery", "takeaway"]:
+        if doc.get("posa_table_no"):
+            frappe.throw(f"You cannot select a Table for {order_type} orders. Please remove the table or change the order type.")
+
     if not doc.get("posa_table_no"):
         return
 
