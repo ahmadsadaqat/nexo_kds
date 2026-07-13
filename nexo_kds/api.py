@@ -312,10 +312,24 @@ def create_kot_from_invoice(doc, method=None):
     branch = None
     if doc.get("pos_profile"):
         branch = frappe.db.get_value("POS Profile", doc.get("pos_profile"), "branch")
-    kot.branch = branch
+    
+    # Validate branch exists to prevent LinkValidationError on insert
+    if branch and frappe.db.exists("Branch", branch):
+        kot.branch = branch
 
     # Get order_type, table, floor
-    kot.order_type = doc.get("posa_order_type") or "Dine In"
+    raw_order_type = doc.get("posa_order_type") or "Dine In"
+    
+    # Match order_type dynamically to avoid validation errors
+    valid_options = frappe.get_meta("Kitchen Order Ticket").get_field("order_type").options
+    matched_type = raw_order_type
+    if valid_options and raw_order_type:
+        for opt in valid_options.split("\n"):
+            if opt and opt.lower().replace("-", "").replace(" ", "") == raw_order_type.lower().replace("-", "").replace(" ", ""):
+                matched_type = opt
+                break
+    
+    kot.order_type = matched_type
     kot.table = doc.get("posa_table_no")
     kot.floor = None
     if kot.table:
