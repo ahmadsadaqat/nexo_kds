@@ -1,0 +1,93 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-11 18:12:52.301293",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "item_name",
+  "qty",
+  "uom",
+  "kds",
+  "status",
+  "has_addons",
+  "addon",
+  "addon_kds"
+ ],
+ "fields": [
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Name"
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Qty"
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "kds",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "KDS Station",
+   "options": "KDS Station"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "\nPending\nIn Progress\nReady\nPicked Up"
+  },
+  {
+   "default": "0",
+   "fieldname": "has_addons",
+   "fieldtype": "Check",
+   "label": "Has Add-Ons"
+  },
+  {
+   "fieldname": "addon",
+   "fieldtype": "Data",
+   "label": "Add-On"
+  },
+  {
+   "fieldname": "addon_kds",
+   "fieldtype": "Link",
+   "label": "Add-On KDS",
+   "options": "KDS Station"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-13 20:41:30.072405",
+ "modified_by": "Administrator",
+ "module": "Nexo Kds",
+ "name": "Kitchen Order Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
