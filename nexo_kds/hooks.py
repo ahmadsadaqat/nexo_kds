@@ -5,6 +5,8 @@ app_description = "Kitchen Display System"
 app_email = "avoguepersonality@gmail.com"
 app_license = "mit"
 
+after_migrate = ["nexo_kds.setup_kot_fields.create_kot_custom_fields"]
+
 fixtures = []
 
 # Apps
