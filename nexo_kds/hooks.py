@@ -141,13 +141,14 @@ fixtures = []
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"POS Invoice": {
+		"on_submit": "nexo_kds.api.create_kot_from_invoice"
+	},
+	"Sales Invoice": {
+		"on_submit": "nexo_kds.api.create_kot_from_invoice"
+	}
+}
 
 # Scheduled Tasks
 # ---------------

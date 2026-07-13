@@ -297,3 +297,50 @@ def create_kot(payload):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "KDS Create KOT Error")
         return {"success": False, "message": str(e)}
+
+def create_kot_from_invoice(doc, method=None):
+    import frappe
+    # Check if KOT already exists for this invoice
+    if frappe.db.exists("Kitchen Order Ticket", {"invoice_no": doc.name}):
+        return
+
+    # Gather items that have a KDS station
+    items_added = 0
+    kot = frappe.new_doc("Kitchen Order Ticket")
+    
+    # Check if doc has pos_profile. If not, maybe it's a Sales Invoice.
+    # Try to get branch
+    branch = doc.get("pos_profile") and frappe.db.get_value("POS Profile", doc.get("pos_profile"), "company") or doc.get("company")
+    kot.branch = branch
+
+    # Get order_type, table, floor
+    kot.order_type = doc.get("posa_order_type") or "Dine In"
+    kot.table = doc.get("posa_table_no")
+    kot.floor = None
+    if kot.table:
+        table_doc = frappe.get_all("Table", or_filters={"table_name": kot.table, "name": kot.table}, fields=["floor"], limit=1)
+        if table_doc:
+            kot.floor = table_doc[0].floor
+
+    kot.status = "Pending"
+    kot.invoice_no = doc.name
+
+    for item in doc.get("items") or []:
+        kds_station = frappe.db.get_value("Item", item.item_code, "custom_kds_station")
+        if not kds_station:
+            continue
+
+        kot.append("item", {
+            "item": item.item_code,
+            "item_name": item.item_name,
+            "qty": item.qty,
+            "uom": item.stock_uom or item.uom,
+            "kds": kds_station,
+            "status": "Pending"
+        })
+        items_added += 1
+
+    if items_added > 0:
+        kot.insert(ignore_permissions=True)
+        # We don't commit here because we are in a document event (transaction)
+
