@@ -308,9 +308,10 @@ def create_kot_from_invoice(doc, method=None):
     items_added = 0
     kot = frappe.new_doc("Kitchen Order Ticket")
     
-    # Check if doc has pos_profile. If not, maybe it's a Sales Invoice.
-    # Try to get branch
-    branch = doc.get("pos_profile") and frappe.db.get_value("POS Profile", doc.get("pos_profile"), "company") or doc.get("company")
+    # Try to get branch from POS Profile
+    branch = None
+    if doc.get("pos_profile"):
+        branch = frappe.db.get_value("POS Profile", doc.get("pos_profile"), "branch")
     kot.branch = branch
 
     # Get order_type, table, floor
