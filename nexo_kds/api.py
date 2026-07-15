@@ -392,6 +392,8 @@ def validate_table_availability(doc, method=None):
 def update_table_status(doc, method=None):
     import frappe
     
+    frappe.log_error(title="KDS update_table_status call", message=f"doc: {doc.name}, doctype: {doc.doctype}, docstatus: {doc.docstatus}, posa_table_no: {doc.get('posa_table_no')}")
+
     old_table = None
     if not doc.get("__islocal") and doc.name:
         old_doc = doc.get_doc_before_save()
@@ -405,9 +407,14 @@ def update_table_status(doc, method=None):
         frappe.db.set_value("Table", old_table, "status", "Available")
         
     if new_table:
-        status = frappe.db.get_value("Table", new_table, "status")
-        if status == "Available":
-            frappe.db.set_value("Table", new_table, "status", "Occupied")
+        if doc.docstatus in [1, 2]:
+            frappe.db.set_value("Table", new_table, "status", "Available")
+        else:
+            status = frappe.db.get_value("Table", new_table, "status")
+            frappe.log_error(title="KDS update_table_status details", message=f"new_table: {new_table}, status: {status}")
+            if status == "Available":
+                frappe.db.set_value("Table", new_table, "status", "Occupied")
+
 
 def free_table(doc, method=None):
     import frappe
