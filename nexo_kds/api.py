@@ -277,13 +277,23 @@ def create_kot(payload):
             if not kds_station:
                 continue # Skip items without a KDS station
                 
+            addon_kds = None
+            for a_code in item.get("addon_codes", []):
+                a_station = frappe.db.get_value("Item", a_code, "custom_kds_station")
+                if a_station:
+                    addon_kds = a_station
+                    break
+
             kot.append("item", {
                 "item": item_code,
                 "item_name": item_doc.item_name,
                 "qty": item.get("qty", 1),
                 "uom": item_doc.stock_uom,
                 "kds": kds_station,
-                "status": "Pending"
+                "status": "Pending",
+                "has_addons": item.get("has_addons", 0),
+                "addon": item.get("addon"),
+                "addon_kds": addon_kds
             })
             items_added += 1
             
