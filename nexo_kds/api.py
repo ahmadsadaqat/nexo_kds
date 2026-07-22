@@ -222,13 +222,23 @@ def get_customer_display_data(branch=None):
         if not branch:
             return {"ready": [], "preparing": []}
 
-        # Case-insensitive branch resolution
-        branch_name = frappe.db.get_value("Branch", {"name": ["like", branch]}, "name") or branch
+        matching_branches = frappe.get_all(
+            "Branch", 
+            or_filters={
+                "name": ["like", f"%{branch}%"],
+                "branch_name": ["like", f"%{branch}%"]
+            }, 
+            pluck="name"
+        )
+        if not matching_branches:
+            matching_branches = [branch]
+        if branch not in matching_branches:
+            matching_branches.append(branch)
 
         orders = frappe.get_all(
             "Kitchen Order Ticket", 
             filters={
-                "branch": branch_name, 
+                "branch": ["in", matching_branches], 
                 "status": ["in", ["Ready", "Ready for Pick-Up", "In Progress", "Preparing"]], 
                 "docstatus": 0
             }, 
@@ -238,10 +248,10 @@ def get_customer_display_data(branch=None):
         def format_token(o):
             inv = o.invoice_no
             if inv:
-                parts = inv.split("-")
-                return parts[-1] if len(parts) > 1 else inv
-            parts = o.name.split("-")
-            return parts[-1] if len(parts) > 1 else o.name
+                parts = str(inv).split("-")
+                return parts[-1] if len(parts) > 1 else str(inv)
+            parts = str(o.name).split("-")
+            return parts[-1] if len(parts) > 1 else str(o.name)
 
         preparing_orders = [format_token(o) for o in orders if o.status in ["In Progress", "Preparing"]]
         ready_orders = [format_token(o) for o in orders if o.status in ["Ready", "Ready for Pick-Up"]]
