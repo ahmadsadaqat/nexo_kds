@@ -318,10 +318,15 @@ def create_kot_from_invoice(doc, method=None):
     items_added = 0
     kot = frappe.new_doc("Kitchen Order Ticket")
     
-    # Try to get branch from POS Profile
+    # Try to get branch from POS Profile using custom_branch
     branch = None
     if doc.get("pos_profile"):
-        branch = frappe.db.get_value("POS Profile", doc.get("pos_profile"), "branch")
+        pos_profile_name = doc.get("pos_profile")
+        meta = frappe.get_meta("POS Profile")
+        if meta.has_field("custom_branch"):
+            branch = frappe.db.get_value("POS Profile", pos_profile_name, "custom_branch")
+        elif meta.has_field("branch"):
+            branch = frappe.db.get_value("POS Profile", pos_profile_name, "branch")
     
     # Validate branch exists to prevent LinkValidationError on insert
     if branch and frappe.db.exists("Branch", branch):
