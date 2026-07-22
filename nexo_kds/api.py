@@ -220,20 +220,21 @@ def finalize_assembly(kot_id):
 def get_customer_display_data(branch=None):
     try:
         if not branch:
+            branch = frappe.form_dict.get("branch")
+        if not branch:
             return {"ready": [], "preparing": []}
+
+        branch_str = str(branch).strip()
 
         matching_branches = frappe.get_all(
             "Branch", 
-            or_filters={
-                "name": ["like", f"%{branch}%"],
-                "branch_name": ["like", f"%{branch}%"]
-            }, 
+            filters={"name": ["like", f"%{branch_str}%"]}, 
             pluck="name"
         )
         if not matching_branches:
-            matching_branches = [branch]
-        if branch not in matching_branches:
-            matching_branches.append(branch)
+            matching_branches = [branch_str]
+        if branch_str not in matching_branches:
+            matching_branches.append(branch_str)
 
         orders = frappe.get_all(
             "Kitchen Order Ticket", 
