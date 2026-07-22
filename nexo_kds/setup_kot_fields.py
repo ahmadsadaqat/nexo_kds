@@ -25,5 +25,14 @@ def create_kot_custom_fields():
 
     from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
     create_custom_fields(custom_fields, ignore_validate=True)
+
+    # Ensure KDS User Role exists
+    if not frappe.db.exists("Role", "KDS User"):
+        role = frappe.new_doc("Role")
+        role.role_name = "KDS User"
+        role.desk_access = 1
+        role.insert(ignore_permissions=True)
+        print("Role 'KDS User' created successfully.")
+
     frappe.db.commit()
     print("Custom fields created successfully.")

@@ -385,29 +385,34 @@ renderOrderCard(kot, stationName) {
     // Filter items based on station (Assembly sees all, others see their own)
     const itemsToShow = stationName === 'Assembly' 
         ? kot.items 
-        : kot.items.filter(item => item.kds === stationName);
+        : kot.items.filter(item => item.kds === stationName || !item.kds);
 
     if (itemsToShow.length === 0) return '';
 
-    const allReady = itemsToShow.every(i => i.status === 'Ready');
+    const allReady = itemsToShow.every(i => i.status === 'Ready' || i.status === 'Picked Up');
+    const displayInvoice = (kot.invoice_id && kot.invoice_id !== 'N/A') ? kot.invoice_id : kot.kot_id;
+    const isDineIn = kot.order_type ? (kot.order_type.toLowerCase().replace(/[^a-z]/g, '') === 'dinein') : (kot.table && kot.table !== 'N/A');
+    const locationLabel = isDineIn && kot.table && kot.table !== 'N/A' 
+        ? `Table: ${kot.table}` 
+        : `Order Type: ${kot.order_type || 'Takeaway'}`;
     
     return `
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-96 shadow-xl flex flex-col data-[theme=light]:bg-white data-[theme=light]:border-slate-200">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-96 max-h-[calc(100vh-210px)] shadow-xl flex flex-col min-h-0 data-[theme=light]:bg-white data-[theme=light]:border-slate-200">
             <div class="p-4 border-b border-slate-800 data-[theme=light]:border-slate-200 bg-slate-950/50 rounded-t-2xl">
-                <h3 class="font-black text-xl text-[#ff9f43]">KOT: ${kot.kot_id}</h3>
-                <h4 class="font-bold text-slate-100 data-[theme=light]:text-slate-900">Table: ${kot.table}</h4>
-                <p class="text-xs text-slate-400 data-[theme=light]:text-slate-500">Inv: ${kot.invoice_id} | Station: ${stationName}</p>
+                <h3 class="font-black text-xl text-[#ff9f43]">KOT: ${displayInvoice}</h3>
+                <h4 class="font-bold text-slate-100 data-[theme=light]:text-slate-900">${locationLabel}</h4>
+                <p class="text-xs text-slate-400 data-[theme=light]:text-slate-500">Ticket: ${kot.kot_id} | Station: ${stationName}</p>
             </div>
             
-            <div class="p-4 space-y-3 flex-1">
+            <div class="p-4 space-y-3 flex-1 overflow-y-auto custom-scrollbar min-h-0">
                 ${itemsToShow.map(item => this.renderItemRow(item, stationName)).join('')}
             </div>
 
             ${stationName === 'Assembly' && allReady ? `
                 <div class="border-t border-slate-800 data-[theme=light]:border-slate-200 p-4">
                     <button onclick="window.kdsEngine.finalizeAssembly('${kot.kot_id}')"
-                            class="w-full bg-green-700 hover:bg-green-600 text-white font-black py-3 rounded-lg text-sm transition-all shadow-lg active:scale-95">
-                            ✓ Mark Ready for Pickup
+                            class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-lg text-sm transition-all shadow-lg active:scale-95 cursor-pointer">
+                            ✓ Mark Picked Up & Complete
                     </button>
                 </div>
             ` : ''}
@@ -416,25 +421,41 @@ renderOrderCard(kot, stationName) {
 }
 
 renderItemRow(item, stationName) {
-    const isReady = item.status === 'Ready';
-    const isPreparing = item.status === 'Preparing';
-    const isPending = item.status === 'Pending';
+    const statusStr = (item.status || '').trim().toLowerCase();
+    const isPending = statusStr === 'pending';
+    const isPreparing = statusStr === 'in progress' || statusStr === 'preparing';
+    const isReady = statusStr === 'ready';
+    const isPickedUp = statusStr === 'picked up';
 
     let buttonHTML = '';
     
-    if (isReady) {
-        buttonHTML = '<span class="text-green-500 text-xs font-bold px-3 py-1.5 border border-green-900 bg-green-900/20 rounded-lg">✓ Ready</span>';
-    } else if (isPending) {
+    if (isPending) {
         buttonHTML = `
             <button onclick="window.kdsEngine.startPreparing('${item.name}')" 
-                    class="bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95">
+                    class="bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95 cursor-pointer shadow-sm">
                     Start Prep
             </button>
         `;
     } else if (isPreparing) {
         buttonHTML = `
             <button onclick="window.kdsEngine.markItemReady('${item.name}')" 
-                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95">
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95 cursor-pointer shadow-sm">
+                    Ready
+            </button>
+        `;
+    } else if (isReady) {
+        buttonHTML = `
+            <button onclick="window.kdsEngine.markItemPickedUp('${item.name}')" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95 cursor-pointer shadow-sm">
+                    Pickup
+            </button>
+        `;
+    } else if (isPickedUp) {
+        buttonHTML = '<span class="text-slate-400 text-xs font-bold px-3 py-1.5 border border-slate-700 bg-slate-800/40 rounded-lg">✓ Picked Up</span>';
+    } else {
+        buttonHTML = `
+            <button onclick="window.kdsEngine.markItemReady('${item.name}')" 
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95 cursor-pointer shadow-sm">
                     Ready
             </button>
         `;
@@ -455,7 +476,7 @@ renderItemRow(item, stationName) {
         try {
             const res = await this.requestApi("nexo_kds.api.update_item_status", {
                 child_id: childId,
-                new_status: "Preparing"
+                new_status: "In Progress"
             }, "POST"); // Ensure it's POST to match the backend form_dict
             
             if (res.success) {
@@ -482,6 +503,23 @@ renderItemRow(item, stationName) {
             }
         } catch (err) {
             console.error("Error calling markItemReady:", err);
+        }
+    }
+
+    async markItemPickedUp(childId) {
+        try {
+            const res = await this.requestApi("nexo_kds.api.update_item_status", {
+                child_id: childId,
+                new_status: "Picked Up"
+            }, "POST");
+            
+            if (res.success) {
+                this.refreshKDSGrid();
+            } else {
+                console.error("Failed to mark picked up:", res.error);
+            }
+        } catch (err) {
+            console.error("Error calling markItemPickedUp:", err);
         }
     }
 
@@ -560,12 +598,17 @@ renderItemRow(item, stationName) {
                     </div>`).join('')
                 : `<div class="text-[10px] text-slate-500 italic">No associated items.</div>`;
 
+            const isDineIn = log.order_type ? (log.order_type.toLowerCase().replace(/[^a-z]/g, '') === 'dinein') : (log.table && log.table !== 'N/A');
+            const locLabel = isDineIn && log.table && log.table !== 'N/A'
+                ? `Table: ${log.table}`
+                : `Order Type: ${log.order_type || 'Takeaway'}`;
+
             return `
                 <div class="history-card bg-slate-950 p-4 rounded-xl border border-slate-800/80 flex flex-col gap-3" data-kot-id="${log.name.toLowerCase()}">
                     <div class="flex justify-between border-b border-slate-800/60 pb-2">
                         <div>
-                            <div class="kot-id font-black text-sm text-slate-200">${log.name}</div>
-                            <div class="text-slate-500 text-xs">Inv: #${log.invoice_no || 'N/A'} | Table: ${log.table}</div>
+                            <div class="kot-id font-black text-sm text-slate-200">${log.invoice_no || log.name}</div>
+                            <div class="text-slate-500 text-xs">${locLabel}</div>
                         </div>
                         <div class="text-right text-xs">
                             <div class="text-slate-500">IN: <span class="text-indigo-400">${created}</span></div>

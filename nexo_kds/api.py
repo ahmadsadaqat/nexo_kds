@@ -15,6 +15,37 @@ def login_kds_user(username, password):
     except Exception as e:
         return {"success": False, "message": str(e)}
 
+def get_station_ids_by_name(branch, station_name):
+    if not station_name or station_name == "All" or station_name == "Assembly":
+        return [station_name]
+    station_docs = frappe.get_all(
+        "KDS Station",
+        filters={"is_active": 1, "branch": branch},
+        or_filters={"kds_station": station_name, "name": station_name},
+        pluck="name",
+    )
+    if not station_docs:
+        return [station_name]
+    ids = list(station_docs)
+    if station_name not in ids:
+        ids.append(station_name)
+    return ids
+
+def get_station_display_map(branch):
+    if not branch:
+        return {}
+    station_docs = frappe.get_all(
+        "KDS Station",
+        filters={"is_active": 1, "branch": branch},
+        fields=["name", "kds_station"],
+    )
+    mapping = {}
+    for s in station_docs:
+        st_name = s.get("kds_station") or s.get("name")
+        mapping[s.get("name")] = st_name
+        mapping[st_name] = st_name
+    return mapping
+
 @frappe.whitelist(allow_guest=True)
 def get_kds_initial_context():
     try:
@@ -22,16 +53,16 @@ def get_kds_initial_context():
         if not user or user == "Guest":
             return {"error": True, "is_guest": True}
         branch = frappe.db.get_value("Employee", {"user_id": user}, "branch")
-        # Don't assume a default branch; if employee has no branch, return no stations
         branch_name = branch
 
         stations = []
         if branch_name:
-            stations = frappe.get_all(
+            station_docs = frappe.get_all(
                 "KDS Station",
                 filters={"is_active": 1, "branch": branch_name},
-                pluck="name",
+                fields=["name", "kds_station"],
             )
+            stations = [s.get("kds_station") or s.get("name") for s in station_docs]
 
         return {"error": False, "user": user, "branch": branch_name, "stations": stations}
     except Exception as e:
@@ -41,14 +72,18 @@ def get_kds_initial_context():
 def get_station_items_count(branch, station_name):
     try:
         valid_kot_names = frappe.get_all("Kitchen Order Ticket", 
-            filters={"branch": branch, "docstatus": 0}, pluck="name")
+            filters={"branch": branch, "docstatus": 0, "status": ["!=", "Picked Up"]}, pluck="name")
         
+        if not valid_kot_names:
+            return {"count": 0}
+
         filters = {"parent": ["in", valid_kot_names]}
         if station_name == "Assembly":
-            filters["status"] = "Ready"
+            filters["status"] = ["in", ["Ready", "In Progress"]]
         else:
-            filters["kds"] = station_name
-            filters["status"] = ["in", ["Pending", "Preparing"]]
+            matching_ids = get_station_ids_by_name(branch, station_name)
+            filters["kds"] = ["in", matching_ids]
+            filters["status"] = ["in", ["Pending", "In Progress", "Preparing", "Ready"]]
         
         count = frappe.db.count(CHILD_DOCTYPE, filters=filters)
         return {"count": count}
@@ -58,49 +93,49 @@ def get_station_items_count(branch, station_name):
 @frappe.whitelist()
 def get_kds_items(branch, station_name):
     try:
-        # 1. Get all active KOTs for the branch
         valid_kot_names = frappe.get_all("Kitchen Order Ticket", 
-            filters={"branch": branch, "docstatus": 0}, pluck="name")
+            filters={"branch": branch, "docstatus": 0, "status": ["!=", "Picked Up"]}, pluck="name")
         
         if not valid_kot_names:
             return []
         
-        # 2. Filter items based on Station
+        station_map = get_station_display_map(branch)
+
         if station_name == "Assembly":
-            # ASSEMBLY: Only show KOTs where the PARENT status is 'Preparing'
             valid_assembly_kots = frappe.get_all("Kitchen Order Ticket",
-                filters={"name": ["in", valid_kot_names], "status": "Preparing"}, pluck="name")
+                filters={"name": ["in", valid_kot_names], "status": ["in", ["In Progress", "Preparing", "Ready"]]}, pluck="name")
             
             if not valid_assembly_kots:
                 return []
             filters = {"parent": ["in", valid_assembly_kots]}
         else:
-            # COOKING STATIONS: Show items assigned to this station 
-            # that are still in 'Pending' or 'Preparing' state
+            matching_ids = get_station_ids_by_name(branch, station_name)
             filters = {
                 "parent": ["in", valid_kot_names],
-                "kds": station_name,
-                "status": ["in", ["Pending", "Preparing"]]
+                "kds": ["in", matching_ids],
+                "status": ["in", ["Pending", "In Progress", "Preparing", "Ready"]]
             }
 
-        # Fetch items
         items = frappe.get_all(CHILD_DOCTYPE, filters=filters, 
             fields=["name", "parent", "item_name", "qty", "status", "kds", "item"])
 
-        # 3. Grouping items by KOT
         grouped_data = {}
         for item in items:
+            raw_kds = item.get("kds")
+            item["kds"] = station_map.get(raw_kds) or raw_kds
+            
             kot = item.parent
             if kot not in grouped_data:
                 kot_info = frappe.db.get_value("Kitchen Order Ticket", kot, 
-                           ["invoice_no", "table", "floor"], as_dict=True)
+                           ["invoice_no", "table", "floor", "order_type"], as_dict=True)
                 if not kot_info: 
                     continue 
                 
                 grouped_data[kot] = {
                     "kot_id": kot,
-                    "invoice_id": kot_info.get("invoice_no") or "N/A",
+                    "invoice_id": kot_info.get("invoice_no") or kot,
                     "table": kot_info.get("table") or "N/A",
+                    "order_type": kot_info.get("order_type") or "Dine In",
                     "floor": kot_info.get("floor") or "N/A",
                     "items": []
                 }
@@ -117,12 +152,14 @@ def update_item_status():
     """
     Update individual item status and synchronize parent KOT status.
     """
-    # Use form_dict to handle POST data
     child_id = frappe.form_dict.get("child_id")
     new_status = frappe.form_dict.get("new_status")
 
     if not child_id or not new_status:
         return {"success": False, "message": "Missing child_id or new_status"}
+
+    if new_status == "Preparing":
+        new_status = "In Progress"
 
     try:
         # 1. Update the item status
@@ -140,29 +177,23 @@ def update_item_status():
             fields=["status"]
         )
         
-        # 4. Determine KOT status based on child items
-        # Logic: 
-        # - If ALL items are 'Ready' -> 'Assembly' (Waiting for final touch)
-        # - Else if ANY item is 'Preparing' -> 'Preparing'
-        # - Else -> 'Pending'
-        
         item_statuses = [i.status for i in all_items]
         
-        if all(s == 'Ready' for s in item_statuses):
-            # Jab sab items ready ho jayen, to order Assembly station par show hoga
-            new_kot_status = "Assembly"
-        elif any(s == 'Preparing' for s in item_statuses):
-            new_kot_status = "Preparing"
+        # 4. Determine parent KOT status based on child items
+        if all(s == 'Picked Up' for s in item_statuses):
+            new_kot_status = "Picked Up"
+        elif all(s in ['Ready', 'Picked Up'] for s in item_statuses):
+            new_kot_status = "Ready"
+        elif any(s in ['Pending', 'In Progress', 'Preparing'] for s in item_statuses):
+            new_kot_status = "In Progress"
         else:
             new_kot_status = "Pending"
             
-        # 5. Update Parent KOT status
+        # 5. Update Parent KOT status field
         frappe.db.set_value("Kitchen Order Ticket", parent_kot, "status", new_kot_status, update_modified=True)
-        
-        # Ensure all changes are committed to the database
         frappe.db.commit()
         
-        return {"success": True, "new_kot_status": new_kot_status}
+        return {"success": True, "new_kot_status": new_kot_status, "item_status": new_status}
         
     except Exception as e:
         frappe.db.rollback() 
@@ -172,30 +203,52 @@ def update_item_status():
 @frappe.whitelist()
 def finalize_assembly(kot_id):
     try:
-        # Update status to match the string used in Customer Screen filters
-        frappe.db.set_value("Kitchen Order Ticket", kot_id, "status", "Ready for Pick-Up", update_modified=True)
+        frappe.db.set_value("Kitchen Order Ticket", kot_id, "status", "Picked Up", update_modified=True)
+        frappe.db.sql("""
+            UPDATE `tabKitchen Order Item` 
+            SET status = 'Picked Up' 
+            WHERE parent = %s
+        """, kot_id)
         frappe.db.commit()
-        return {"success": True, "message": "KOT finalized"}
+        return {"success": True, "message": "KOT picked up and completed"}
     except Exception as e:
+        frappe.db.rollback()
         frappe.log_error(frappe.get_traceback(), "Finalize Assembly Error")
         return {"success": False, "error": str(e)}
     
 @frappe.whitelist(allow_guest=True)
-def get_customer_display_data(branch):
+def get_customer_display_data(branch=None):
     try:
-        # Fetching BOTH statuses to be safe
-        orders = frappe.get_all("Kitchen Order Ticket", 
+        if not branch:
+            return {"ready": [], "preparing": []}
+
+        # Case-insensitive branch resolution
+        branch_name = frappe.db.get_value("Branch", {"name": ["like", branch]}, "name") or branch
+
+        orders = frappe.get_all(
+            "Kitchen Order Ticket", 
             filters={
-                "branch": branch, 
-                "status": ["in", ["Ready for Pick-Up", "Preparing"]], 
+                "branch": branch_name, 
+                "status": ["in", ["Ready", "Ready for Pick-Up", "In Progress", "Preparing"]], 
                 "docstatus": 0
             }, 
-            fields=["name", "status"]
+            fields=["name", "invoice_no", "status"]
         )
         
+        def format_token(o):
+            inv = o.invoice_no
+            if inv:
+                parts = inv.split("-")
+                return parts[-1] if len(parts) > 1 else inv
+            parts = o.name.split("-")
+            return parts[-1] if len(parts) > 1 else o.name
+
+        preparing_orders = [format_token(o) for o in orders if o.status in ["In Progress", "Preparing"]]
+        ready_orders = [format_token(o) for o in orders if o.status in ["Ready", "Ready for Pick-Up"]]
+
         return {
-            "ready": [o.name.split("-")[-1] for o in orders if o.status == "Ready for Pick-Up"],
-            "preparing": [o.name.split("-")[-1] for o in orders if o.status == "Preparing"]
+            "ready": ready_orders,
+            "preparing": preparing_orders
         }
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Customer Display Error")
@@ -215,7 +268,7 @@ def get_kot_history(branch):
             "status": "Picked Up", 
             "modified": [">=", ten_hours_ago]
         },
-        fields=["name", "invoice_no", "table", "creation", "modified"],
+        fields=["name", "invoice_no", "table", "order_type", "creation", "modified"],
         order_by="modified desc"
     )
     

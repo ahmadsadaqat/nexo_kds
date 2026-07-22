@@ -7,7 +7,20 @@ app_license = "mit"
 
 after_migrate = ["nexo_kds.setup_kot_fields.create_kot_custom_fields"]
 
-fixtures = []
+fixtures = [
+	{
+		"dt": "Role",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"KDS User"
+				]
+			]
+		]
+	}
+]
 
 # Apps
 # ------------------

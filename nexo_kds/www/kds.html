@@ -133,7 +133,7 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-x-auto overflow-y-hidden p-6 flex gap-6 items-start custom-scrollbar bg-slate-950/10 data-[theme=light]:bg-slate-100/30 backdrop-blur-[1px]" id="kds-orders-container">
+        <main class="flex-1 overflow-auto p-6 flex flex-col gap-6 items-start custom-scrollbar bg-slate-950/10 data-[theme=light]:bg-slate-100/30 backdrop-blur-[1px]" id="kds-orders-container">
         </main>
     </div>
 
@@ -217,6 +217,6 @@
     window.csrf_token = "{{ frappe.session.csrf_token }}";
 </script>
 
-    <script src="/assets/nexo_kds/js/kds.js"></script>
+    <script src="/assets/nexo_kds/js/kds.js?v={{ frappe.utils.now_datetime() }}"></script>
 </body>
 </html>
