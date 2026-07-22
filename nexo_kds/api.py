@@ -379,13 +379,15 @@ def validate_table_availability(doc, method=None):
     import frappe
     
     order_type = doc.get("posa_order_type") or ""
-    # If order type is Delivery or Takeaway, table should not be used
-    if order_type.lower() in ["delivery", "takeaway"]:
+    # If order type is not Dine In (e.g. Takeaway, Delivery), table should not be used
+    if order_type.lower() != "dine in":
         if doc.get("posa_table_no"):
-            frappe.throw(f"You cannot select a Table for {order_type} orders. Please remove the table or change the order type.")
-
-    if not doc.get("posa_table_no"):
+            doc.posa_table_no = None
         return
+
+    # Enforce table selection for Dine In orders
+    if not doc.get("posa_table_no"):
+        frappe.throw("Please select a Table for Dine In orders.")
 
     is_new_table = False
     if not doc.name or doc.get("__islocal"):
